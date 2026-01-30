@@ -107,6 +107,77 @@ local function StyleAuras(_, button, unit, auraType)
     -- local hasExpiration = C_UnitAuras.DoesAuraHaveExpirationTime(unit, auraInstanceID)
 end
 
+local function ReanchorAuras(unitFrame)
+    if not unitFrame then return end
+    local unit = unitFrame.unit
+    if not unit then return end
+    
+    local AurasDB = UUF.db.profile.Units[UUF:GetNormalizedUnit(unit)].Auras
+    if not AurasDB then return end
+    local BuffsDB = AurasDB.Buffs
+    local DebuffsDB = AurasDB.Debuffs
+
+    -- Handle Buffs Anchoring
+    if BuffsDB.Enabled and unitFrame.BuffContainer then
+        local anchorFrame = unitFrame
+        local useDebuffsPosition = false
+
+        if BuffsDB.AnchorFrame and BuffsDB.AnchorFrame ~= "" then
+            if _G[BuffsDB.AnchorFrame] then
+                anchorFrame = _G[BuffsDB.AnchorFrame]
+                -- Check if anchored to Debuffs
+                if anchorFrame == unitFrame.DebuffContainer then
+                    if (unitFrame.DebuffContainer.visibleButtons or 0) == 0 then
+                        useDebuffsPosition = true
+                    end
+                end
+            end
+        end
+
+        unitFrame.BuffContainer:ClearAllPoints()
+        if useDebuffsPosition then
+            -- Fallback to Debuffs position parameters
+            local fallbackAnchor = unitFrame
+            if DebuffsDB.AnchorFrame and DebuffsDB.AnchorFrame ~= "" and _G[DebuffsDB.AnchorFrame] then
+                fallbackAnchor = _G[DebuffsDB.AnchorFrame]
+            end
+            unitFrame.BuffContainer:SetPoint(DebuffsDB.Layout[1], fallbackAnchor, DebuffsDB.Layout[2], DebuffsDB.Layout[3], DebuffsDB.Layout[4])
+        else
+            unitFrame.BuffContainer:SetPoint(BuffsDB.Layout[1], anchorFrame, BuffsDB.Layout[2], BuffsDB.Layout[3], BuffsDB.Layout[4])
+        end
+    end
+
+    -- Handle Debuffs Anchoring
+    if DebuffsDB.Enabled and unitFrame.DebuffContainer then
+        local anchorFrame = unitFrame
+        local useBuffsPosition = false
+
+        if DebuffsDB.AnchorFrame and DebuffsDB.AnchorFrame ~= "" then
+            if _G[DebuffsDB.AnchorFrame] then
+                anchorFrame = _G[DebuffsDB.AnchorFrame]
+                -- Check if anchored to Buffs
+                if anchorFrame == unitFrame.BuffContainer then
+                   if (unitFrame.BuffContainer.visibleButtons or 0) == 0 then
+                       useBuffsPosition = true
+                   end
+                end
+            end
+        end
+
+        unitFrame.DebuffContainer:ClearAllPoints()
+        if useBuffsPosition then
+             -- Fallback to Buffs position parameters
+            local fallbackAnchor = unitFrame
+            if BuffsDB.AnchorFrame and BuffsDB.AnchorFrame ~= "" and _G[BuffsDB.AnchorFrame] then
+                fallbackAnchor = _G[BuffsDB.AnchorFrame]
+            end
+            unitFrame.DebuffContainer:SetPoint(BuffsDB.Layout[1], fallbackAnchor, BuffsDB.Layout[2], BuffsDB.Layout[3], BuffsDB.Layout[4])
+        else
+            unitFrame.DebuffContainer:SetPoint(DebuffsDB.Layout[1], anchorFrame, DebuffsDB.Layout[2], DebuffsDB.Layout[3], DebuffsDB.Layout[4])
+        end
+    end
+end
+
 local function RestyleAuras(_, button, unit, auraType)
     if not button or not unit or not auraType then return end
     local GeneralDB = UUF.db.profile.General
@@ -182,6 +253,8 @@ local function CreateUnitBuffs(unitFrame, unit)
         unitFrame.BuffContainer.tooltipAnchor = "ANCHOR_CURSOR"
         unitFrame.BuffContainer.showType = BuffsDB.ShowType
         unitFrame.BuffContainer.showBuffType = BuffsDB.ShowType
+        unitFrame.BuffContainer.PostUpdate = function() ReanchorAuras(unitFrame) end
+
         unitFrame.BuffContainer.dispelColorCurve = C_CurveUtil.CreateColorCurve()
         unitFrame.BuffContainer.dispelColorCurve:SetType(Enum.LuaCurveType.Step)
         for _, dispelIndex in next, oUF.Enum.DispelType do
@@ -223,6 +296,8 @@ local function CreateUnitDebuffs(unitFrame, unit)
         unitFrame.DebuffContainer.tooltipAnchor = "ANCHOR_CURSOR"
         unitFrame.DebuffContainer.showType = DebuffsDB.ShowType
         unitFrame.DebuffContainer.showDebuffType = DebuffsDB.ShowType
+        unitFrame.DebuffContainer.PostUpdate = function() ReanchorAuras(unitFrame) end
+
         unitFrame.DebuffContainer.dispelColorCurve = C_CurveUtil.CreateColorCurve()
         unitFrame.DebuffContainer.dispelColorCurve:SetType(Enum.LuaCurveType.Step)
         for _, dispelIndex in next, oUF.Enum.DispelType do
@@ -256,7 +331,15 @@ function UUF:UpdateUnitAuras(unitFrame, unit)
         local buffContainerHeight = (BuffsDB.Size + BuffsDB.Layout[5]) * buffRows - BuffsDB.Layout[5]
         unitFrame.BuffContainer:ClearAllPoints()
         unitFrame.BuffContainer:SetSize(buffContainerWidth, buffContainerHeight)
-        unitFrame.BuffContainer:SetPoint(BuffsDB.Layout[1], unitFrame, BuffsDB.Layout[2], BuffsDB.Layout[3], BuffsDB.Layout[4])
+        
+        local anchorFrame = unitFrame
+        if BuffsDB.AnchorFrame and BuffsDB.AnchorFrame ~= "" and _G[BuffsDB.AnchorFrame] then
+            anchorFrame = _G[BuffsDB.AnchorFrame]
+        end
+        unitFrame.BuffContainer:SetPoint(BuffsDB.Layout[1], anchorFrame, BuffsDB.Layout[2], BuffsDB.Layout[3], BuffsDB.Layout[4])
+
+        -- Fallback handled by ReanchorAuras later
+        
         unitFrame.BuffContainer:SetFrameStrata(UUF.db.profile.Units[UUF:GetNormalizedUnit(unit)].Auras.FrameStrata)
         unitFrame.BuffContainer.size = BuffsDB.Size
         unitFrame.BuffContainer.spacing = BuffsDB.Layout[5]
@@ -271,6 +354,7 @@ function UUF:UpdateUnitAuras(unitFrame, unit)
         unitFrame.BuffContainer.PostCreateButton = function(_, button) StyleAuras(_, button, unit, "HELPFUL") end
         unitFrame.BuffContainer.showType = BuffsDB.ShowType
         unitFrame.BuffContainer.showBuffType = BuffsDB.ShowType
+        unitFrame.BuffContainer.PostUpdate = function() ReanchorAuras(unitFrame) end
         unitFrame.BuffContainer:Show()
     else
         unitFrame.BuffContainer:Hide()
@@ -286,7 +370,15 @@ function UUF:UpdateUnitAuras(unitFrame, unit)
         unitFrame.DebuffContainer:ClearAllPoints()
         unitFrame.DebuffContainer:SetSize(debuffContainerWidth, debuffContainerHeight)
         unitFrame.DebuffContainer:SetFrameStrata(UUF.db.profile.Units[UUF:GetNormalizedUnit(unit)].Auras.FrameStrata)
-        unitFrame.DebuffContainer:SetPoint(DebuffsDB.Layout[1], unitFrame, DebuffsDB.Layout[2], DebuffsDB.Layout[3], DebuffsDB.Layout[4])
+        
+        local anchorFrame = unitFrame
+        if DebuffsDB.AnchorFrame and DebuffsDB.AnchorFrame ~= "" and _G[DebuffsDB.AnchorFrame] then
+            anchorFrame = _G[DebuffsDB.AnchorFrame]
+        end
+        unitFrame.DebuffContainer:SetPoint(DebuffsDB.Layout[1], anchorFrame, DebuffsDB.Layout[2], DebuffsDB.Layout[3], DebuffsDB.Layout[4])
+        
+        -- Fallback handled by ReanchorAuras later
+
         unitFrame.DebuffContainer.size = DebuffsDB.Size
         unitFrame.DebuffContainer.spacing = DebuffsDB.Layout[5]
         unitFrame.DebuffContainer.num = DebuffsDB.Num
@@ -300,6 +392,7 @@ function UUF:UpdateUnitAuras(unitFrame, unit)
         unitFrame.DebuffContainer.PostCreateButton = function(_, button) StyleAuras(_, button, unit, "HARMFUL") end
         unitFrame.DebuffContainer.showType = DebuffsDB.ShowType
         unitFrame.DebuffContainer.showDebuffType = DebuffsDB.ShowType
+        unitFrame.DebuffContainer.PostUpdate = function() ReanchorAuras(unitFrame) end
         unitFrame.DebuffContainer:Show()
     else
         unitFrame.DebuffContainer:Hide()
@@ -326,7 +419,11 @@ function UUF:UpdateUnitAuras(unitFrame, unit)
             RestyleAuras(_, button, unit, "HARMFUL")
         end
     end
-    if UUF.AURA_TEST_MODE == true then UUF:CreateTestAuras(unitFrame, unit) end
+    if UUF.AURA_TEST_MODE == true then 
+        UUF:CreateTestAuras(unitFrame, unit) 
+    else
+        ReanchorAuras(unitFrame)
+    end
 end
 
 function UUF:CreateUnitAuras(unitFrame, unit)
@@ -356,7 +453,13 @@ function UUF:CreateTestAuras(unitFrame, unit)
         if unitFrame.BuffContainer then
             if BuffsDB.Enabled then
                 unitFrame.BuffContainer:ClearAllPoints()
-                unitFrame.BuffContainer:SetPoint(BuffsDB.Layout[1], unitFrame, BuffsDB.Layout[2], BuffsDB.Layout[3], BuffsDB.Layout[4])
+                
+                local anchorFrame = unitFrame
+                if BuffsDB.AnchorFrame and BuffsDB.AnchorFrame ~= "" and _G[BuffsDB.AnchorFrame] then
+                    anchorFrame = _G[BuffsDB.AnchorFrame]
+                end
+                unitFrame.BuffContainer:SetPoint(BuffsDB.Layout[1], anchorFrame, BuffsDB.Layout[2], BuffsDB.Layout[3], BuffsDB.Layout[4])
+                
                 unitFrame.BuffContainer:SetFrameStrata(UUF.db.profile.Units[UUF:GetNormalizedUnit(unit)].Auras.FrameStrata)
                 unitFrame.BuffContainer:Show()
 
@@ -440,7 +543,13 @@ function UUF:CreateTestAuras(unitFrame, unit)
         if unitFrame.DebuffContainer then
             if DebuffsDB.Enabled then
                 unitFrame.DebuffContainer:ClearAllPoints()
-                unitFrame.DebuffContainer:SetPoint(DebuffsDB.Layout[1], unitFrame, DebuffsDB.Layout[2], DebuffsDB.Layout[3], DebuffsDB.Layout[4])
+                
+                local anchorFrame = unitFrame
+                if DebuffsDB.AnchorFrame and DebuffsDB.AnchorFrame ~= "" and _G[DebuffsDB.AnchorFrame] then
+                    anchorFrame = _G[DebuffsDB.AnchorFrame]
+                end
+                unitFrame.DebuffContainer:SetPoint(DebuffsDB.Layout[1], anchorFrame, DebuffsDB.Layout[2], DebuffsDB.Layout[3], DebuffsDB.Layout[4])
+
                 unitFrame.DebuffContainer:SetFrameStrata(UUF.db.profile.Units[UUF:GetNormalizedUnit(unit)].Auras.FrameStrata)
                 unitFrame.DebuffContainer:Show()
 

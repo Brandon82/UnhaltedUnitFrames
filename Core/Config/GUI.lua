@@ -2243,6 +2243,22 @@ local function CreateSpecificAuraSettings(containerParent, unit, auraDB)
 
     local LayoutContainer = GUIWidgets.CreateInlineGroup(containerParent, "Layout & Positioning")
 
+    if unit == "target" then
+        local AnchorFrameInput = AG:Create("EditBox")
+        AnchorFrameInput:SetLabel("Anchor Frame")
+        AnchorFrameInput:SetText(AuraDB.AnchorFrame)
+        AnchorFrameInput:SetRelativeWidth(1.0)
+        AnchorFrameInput:SetCallback("OnEnterPressed", function(_, _, value)
+            AuraDB.AnchorFrame = value
+            if unit == "boss" then
+                UUF:UpdateBossFrames()
+            else
+                UUF:UpdateUnitAuras(UUF[unit:upper()], unit, auraDB)
+            end
+        end)
+        LayoutContainer:AddChild(AnchorFrameInput)
+    end
+
     local AnchorFromDropdown = AG:Create("Dropdown")
     AnchorFromDropdown:SetList(AnchorPoints[1], AnchorPoints[2])
     AnchorFromDropdown:SetLabel("Anchor From")

@@ -442,6 +442,7 @@ local Defaults = {
                     },
                     Buffs = {
                         Enabled = true,
+                        AnchorFrame = "",
                         OnlyShowPlayer = false,
                         Size = 34,
                         Layout = {"BOTTOMLEFT", "TOPLEFT", 0, 1, 1},
@@ -459,6 +460,7 @@ local Defaults = {
                     },
                     Debuffs = {
                         Enabled = true,
+                        AnchorFrame = "",
                         OnlyShowPlayer = false,
                         Size = 34,
                         Layout = {"BOTTOMRIGHT", "TOPRIGHT", 0, 1, 1},
