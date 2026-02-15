@@ -1079,6 +1079,38 @@ local function CreateCastBarIconSettings(containerParent, unit, updateCallback)
     RefreshCastBarIconSettings()
 end
 
+local function CreateCastBarFontSettings(containerParent, unit, updateCallback)
+    local CastBarDB = UUF.db.profile.Units[unit].CastBar
+    CastBarDB.Fonts = CastBarDB.Fonts or {}
+    if CastBarDB.Fonts.Override == nil then CastBarDB.Fonts.Override = false end
+    if not CastBarDB.Fonts.Font or CastBarDB.Fonts.Font == "" then CastBarDB.Fonts.Font = UUF.db.profile.General.Fonts.Font end
+
+    local FontContainer = GUIWidgets.CreateInlineGroup(containerParent, "Font Settings")
+
+    GUIWidgets.CreateInformationTag(FontContainer, "Use the global font by default, or enable override to use a custom castbar font for this unit.")
+
+    local OverrideToggle = AG:Create("CheckBox")
+    OverrideToggle:SetLabel("Override Global Font")
+    OverrideToggle:SetValue(CastBarDB.Fonts.Override)
+    OverrideToggle:SetCallback("OnValueChanged", function(_, _, value) CastBarDB.Fonts.Override = value updateCallback() RefreshCastBarFontSettings() end)
+    OverrideToggle:SetRelativeWidth(0.5)
+    FontContainer:AddChild(OverrideToggle)
+
+    local FontDropdown = AG:Create("LSM30_Font")
+    FontDropdown:SetList(LSM:HashTable("font"))
+    FontDropdown:SetLabel("Castbar Font")
+    FontDropdown:SetValue(CastBarDB.Fonts.Font)
+    FontDropdown:SetRelativeWidth(0.5)
+    FontDropdown:SetCallback("OnValueChanged", function(widget, _, value) widget:SetValue(value) CastBarDB.Fonts.Font = value updateCallback() end)
+    FontContainer:AddChild(FontDropdown)
+
+    function RefreshCastBarFontSettings()
+        FontDropdown:SetDisabled(not CastBarDB.Fonts.Override)
+    end
+
+    RefreshCastBarFontSettings()
+end
+
 local function CreateCastBarSpellNameTextSettings(containerParent, unit, updateCallback)
     local CastBarTextDB = UUF.db.profile.Units[unit].CastBar.Text
     local SpellNameTextDB = CastBarTextDB.SpellName
@@ -1266,6 +1298,8 @@ local function CreateCastBarSettings(containerParent, unit)
             CreateCastBarBarSettings(CastBarContainer, unit, function() if unit == "boss" then UUF:UpdateBossFrames() else UUF:UpdateUnitCastBar(UUF[unit:upper()], unit) end end)
         elseif CastBarTab == "Icon" then
             CreateCastBarIconSettings(CastBarContainer, unit, function() if unit == "boss" then UUF:UpdateBossFrames() else UUF:UpdateUnitCastBar(UUF[unit:upper()], unit) end end)
+        elseif CastBarTab == "Fonts" then
+            CreateCastBarFontSettings(CastBarContainer, unit, function() if unit == "boss" then UUF:UpdateBossFrames() else UUF:UpdateUnitCastBar(UUF[unit:upper()], unit) end end)
         elseif CastBarTab == "SpellName" then
             CreateCastBarSpellNameTextSettings(CastBarContainer, unit, function() if unit == "boss" then UUF:UpdateBossFrames() else UUF:UpdateUnitCastBar(UUF[unit:upper()], unit) end end)
         elseif CastBarTab == "Duration" then
@@ -1279,6 +1313,7 @@ local function CreateCastBarSettings(containerParent, unit)
     CastBarTabGroup:SetTabs({
         {text = "Bar", value = "Bar"},
         {text = "Icon" , value = "Icon"},
+        {text = "Fonts", value = "Fonts"},
         {text = "Text: |cFFFFFFFFSpell Name|r", value = "SpellName"},
         {text = "Text: |cFFFFFFFFDuration|r", value = "Duration"},
     })
