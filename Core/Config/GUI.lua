@@ -707,6 +707,9 @@ local function CreateHealPredictionSettings(containerParent, unit, updateCallbac
     local FrameDB = UUF.db.profile.Units[unit].Frame
     local HealPredictionDB = UUF.db.profile.Units[unit].HealPrediction
 
+    if HealPredictionDB.Absorbs.UseFrameHeight == nil then HealPredictionDB.Absorbs.UseFrameHeight = false end
+    if HealPredictionDB.HealAbsorbs.UseFrameHeight == nil then HealPredictionDB.HealAbsorbs.UseFrameHeight = false end
+
     local AbsorbSettings = GUIWidgets.CreateInlineGroup(containerParent, "Absorb Settings")
 
     local ShowAbsorbToggle = AG:Create("CheckBox")
@@ -739,6 +742,13 @@ local function CreateHealPredictionSettings(containerParent, unit, updateCallbac
     AbsorbHeightSlider:SetRelativeWidth(0.33)
     AbsorbHeightSlider:SetCallback("OnValueChanged", function(_, _, value) HealPredictionDB.Absorbs.Height = value updateCallback() end)
     AbsorbSettings:AddChild(AbsorbHeightSlider)
+
+    local UseFrameHeightAbsorbToggle = AG:Create("CheckBox")
+    UseFrameHeightAbsorbToggle:SetLabel("Use frame height")
+    UseFrameHeightAbsorbToggle:SetValue(HealPredictionDB.Absorbs.UseFrameHeight)
+    UseFrameHeightAbsorbToggle:SetRelativeWidth(0.33)
+    UseFrameHeightAbsorbToggle:SetCallback("OnValueChanged", function(_, _, value) HealPredictionDB.Absorbs.UseFrameHeight = value updateCallback() RefreshHealPredictionSettings() end)
+    AbsorbSettings:AddChild(UseFrameHeightAbsorbToggle)
 
     local AbsorbPositionDropdown = AG:Create("Dropdown")
     AbsorbPositionDropdown:SetList({["LEFT"] = "Left", ["RIGHT"] = "Right", ["ATTACH"] = "Attach To Missing Health"}, {"LEFT", "RIGHT", "ATTACH"})
@@ -780,6 +790,13 @@ local function CreateHealPredictionSettings(containerParent, unit, updateCallbac
     HealAbsorbHeightSlider:SetCallback("OnValueChanged", function(_, _, value) HealPredictionDB.HealAbsorbs.Height = value updateCallback() end)
     HealAbsorbSettings:AddChild(HealAbsorbHeightSlider)
 
+    local UseFrameHeightHealAbsorbToggle = AG:Create("CheckBox")
+    UseFrameHeightHealAbsorbToggle:SetLabel("Use frame height")
+    UseFrameHeightHealAbsorbToggle:SetValue(HealPredictionDB.HealAbsorbs.UseFrameHeight)
+    UseFrameHeightHealAbsorbToggle:SetRelativeWidth(0.33)
+    UseFrameHeightHealAbsorbToggle:SetCallback("OnValueChanged", function(_, _, value) HealPredictionDB.HealAbsorbs.UseFrameHeight = value updateCallback() RefreshHealPredictionSettings() end)
+    HealAbsorbSettings:AddChild(UseFrameHeightHealAbsorbToggle)
+
     local HealAbsorbPositionDropdown = AG:Create("Dropdown")
     HealAbsorbPositionDropdown:SetList({["LEFT"] = "Left", ["RIGHT"] = "Right", ["ATTACH"] = "Attach To Missing Health"}, {"LEFT", "RIGHT", "ATTACH"})
     HealAbsorbPositionDropdown:SetLabel("Position")
@@ -791,6 +808,9 @@ local function CreateHealPredictionSettings(containerParent, unit, updateCallbac
     function RefreshHealPredictionSettings()
         GUIWidgets.DeepDisable(AbsorbSettings, not HealPredictionDB.Absorbs.Enabled, ShowAbsorbToggle)
         GUIWidgets.DeepDisable(HealAbsorbSettings, not HealPredictionDB.HealAbsorbs.Enabled, ShowHealAbsorbToggle)
+
+        AbsorbHeightSlider:SetDisabled(not HealPredictionDB.Absorbs.Enabled or HealPredictionDB.Absorbs.UseFrameHeight)
+        HealAbsorbHeightSlider:SetDisabled(not HealPredictionDB.HealAbsorbs.Enabled or HealPredictionDB.HealAbsorbs.UseFrameHeight)
     end
 
     RefreshHealPredictionSettings()
