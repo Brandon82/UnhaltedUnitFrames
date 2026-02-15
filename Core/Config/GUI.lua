@@ -863,6 +863,82 @@ local function CreateGlobalHealPredictionSettings(containerParent)
     })
 end
 
+local function CreateCastBarColoursAndTogglesSettings(containerParent, castBarDB, onUpdate)
+    local ColourContainer = GUIWidgets.CreateInlineGroup(containerParent, "Colours & Toggles")
+
+    local ColourByClassToggle = AG:Create("CheckBox")
+    ColourByClassToggle:SetLabel("Colour by Class / Reaction")
+    ColourByClassToggle:SetValue(castBarDB.ColourByClass)
+    ColourByClassToggle:SetRelativeWidth(1)
+    ColourByClassToggle:SetCallback("OnValueChanged", function(_, _, value) castBarDB.ColourByClass = value onUpdate() RefreshCastBarColourSettings() end)
+    ColourContainer:AddChild(ColourByClassToggle)
+
+    local ForegroundColourPicker = AG:Create("ColorPicker")
+    ForegroundColourPicker:SetLabel("Foreground")
+    local R, G, B, A = unpack(castBarDB.Foreground)
+    ForegroundColourPicker:SetColor(R, G, B, A)
+    ForegroundColourPicker:SetCallback("OnValueChanged", function(_, _, r, g, b, a) castBarDB.Foreground = {r, g, b, a} onUpdate() end)
+    ForegroundColourPicker:SetHasAlpha(true)
+    ForegroundColourPicker:SetRelativeWidth(0.33)
+    ColourContainer:AddChild(ForegroundColourPicker)
+
+    local BackgroundColourPicker = AG:Create("ColorPicker")
+    BackgroundColourPicker:SetLabel("Background")
+    local R2, G2, B2, A2 = unpack(castBarDB.Background)
+    BackgroundColourPicker:SetColor(R2, G2, B2, A2)
+    BackgroundColourPicker:SetCallback("OnValueChanged", function(_, _, r, g, b, a) castBarDB.Background = {r, g, b, a} onUpdate() end)
+    BackgroundColourPicker:SetHasAlpha(true)
+    BackgroundColourPicker:SetRelativeWidth(0.33)
+    ColourContainer:AddChild(BackgroundColourPicker)
+
+    local NotInterruptibleColourPicker = AG:Create("ColorPicker")
+    NotInterruptibleColourPicker:SetLabel("Not Interruptible")
+    local R3, G3, B3, A3 = unpack(castBarDB.NotInterruptibleColour)
+    NotInterruptibleColourPicker:SetColor(R3, G3, B3, A3)
+    NotInterruptibleColourPicker:SetCallback("OnValueChanged", function(_, _, r, g, b, a) castBarDB.NotInterruptibleColour = {r, g, b, a} onUpdate() end)
+    NotInterruptibleColourPicker:SetHasAlpha(true)
+    NotInterruptibleColourPicker:SetRelativeWidth(0.33)
+    ColourContainer:AddChild(NotInterruptibleColourPicker)
+
+    function RefreshCastBarColourSettings(disabled)
+        ColourByClassToggle:SetDisabled(disabled)
+        ForegroundColourPicker:SetDisabled(disabled or castBarDB.ColourByClass)
+        BackgroundColourPicker:SetDisabled(disabled)
+        NotInterruptibleColourPicker:SetDisabled(disabled)
+    end
+
+    RefreshCastBarColourSettings(false)
+
+    return {
+        Refresh = RefreshCastBarColourSettings,
+    }
+end
+
+local function ApplyCastBarColourSettingsToAllUnits(sourceCastBarDB)
+    for _, unitDB in pairs(UUF.db.profile.Units) do
+        if unitDB.CastBar then
+            unitDB.CastBar.ColourByClass = sourceCastBarDB.ColourByClass
+            UUF:CopyTable(sourceCastBarDB.Foreground, unitDB.CastBar.Foreground)
+            UUF:CopyTable(sourceCastBarDB.Background, unitDB.CastBar.Background)
+            UUF:CopyTable(sourceCastBarDB.NotInterruptibleColour, unitDB.CastBar.NotInterruptibleColour)
+        end
+    end
+end
+
+local function CreateGlobalCastBarSettings(containerParent)
+    local Container = GUIWidgets.CreateInlineGroup(containerParent, "Castbars")
+
+    GUIWidgets.CreateInformationTag(Container,"Castbar colour settings are applied to all Unit Frames where appropriate.")
+
+    local GlobalCastBarDB = {}
+    UUF:CopyTable(UUF.db.profile.Units.player.CastBar, GlobalCastBarDB)
+
+    CreateCastBarColoursAndTogglesSettings(Container, GlobalCastBarDB, function()
+        ApplyCastBarColourSettingsToAllUnits(GlobalCastBarDB)
+        UUF:UpdateAllUnitFrames()
+    end)
+end
+
 local function CreateCastBarBarSettings(containerParent, unit, updateCallback)
     local FrameDB = UUF.db.profile.Units[unit].Frame
     local CastBarDB = UUF.db.profile.Units[unit].CastBar
@@ -946,34 +1022,7 @@ local function CreateCastBarBarSettings(containerParent, unit, updateCallback)
     FrameStrataDropdown:SetCallback("OnValueChanged", function(_, _, value) CastBarDB.FrameStrata = value updateCallback() end)
     LayoutContainer:AddChild(FrameStrataDropdown)
 
-    local ColourContainer = GUIWidgets.CreateInlineGroup(containerParent, "Colours & Toggles")
-
-    local ForegroundColourPicker = AG:Create("ColorPicker")
-    ForegroundColourPicker:SetLabel("Foreground")
-    local R, G, B, A = unpack(CastBarDB.Foreground)
-    ForegroundColourPicker:SetColor(R, G, B, A)
-    ForegroundColourPicker:SetCallback("OnValueChanged", function(_, _, r, g, b, a) CastBarDB.Foreground = {r, g, b, a} updateCallback() end)
-    ForegroundColourPicker:SetHasAlpha(true)
-    ForegroundColourPicker:SetRelativeWidth(0.33)
-    ColourContainer:AddChild(ForegroundColourPicker)
-
-    local BackgroundColourPicker = AG:Create("ColorPicker")
-    BackgroundColourPicker:SetLabel("Background")
-    local R2, G2, B2, A2 = unpack(CastBarDB.Background)
-    BackgroundColourPicker:SetColor(R2, G2, B2, A2)
-    BackgroundColourPicker:SetCallback("OnValueChanged", function(_, _, r, g, b, a) CastBarDB.Background = {r, g, b, a} updateCallback() end)
-    BackgroundColourPicker:SetHasAlpha(true)
-    BackgroundColourPicker:SetRelativeWidth(0.33)
-    ColourContainer:AddChild(BackgroundColourPicker)
-
-    local NotInterruptibleColourPicker = AG:Create("ColorPicker")
-    NotInterruptibleColourPicker:SetLabel("Not Interruptible")
-    local R3, G3, B3 = unpack(CastBarDB.NotInterruptibleColour)
-    NotInterruptibleColourPicker:SetColor(R3, G3, B3)
-    NotInterruptibleColourPicker:SetCallback("OnValueChanged", function(_, _, r, g, b, a) CastBarDB.NotInterruptibleColour = {r, g, b, a} updateCallback() end)
-    NotInterruptibleColourPicker:SetHasAlpha(true)
-    NotInterruptibleColourPicker:SetRelativeWidth(0.33)
-    ColourContainer:AddChild(NotInterruptibleColourPicker)
+    local CastBarColourSettings = CreateCastBarColoursAndTogglesSettings(containerParent, CastBarDB, updateCallback)
 
     function RefreshCastBarBarSettings()
         if CastBarDB.Enabled then
@@ -984,9 +1033,7 @@ local function CreateCastBarBarSettings(containerParent, unit, updateCallback)
             AnchorToDropdown:SetDisabled(false)
             XPosSlider:SetDisabled(false)
             YPosSlider:SetDisabled(false)
-            ForegroundColourPicker:SetDisabled(CastBarDB.ColourByClass)
-            BackgroundColourPicker:SetDisabled(false)
-            NotInterruptibleColourPicker:SetDisabled(false)
+            CastBarColourSettings.Refresh(false)
         else
             MatchParentWidthToggle:SetDisabled(true)
             WidthSlider:SetDisabled(true)
@@ -995,9 +1042,7 @@ local function CreateCastBarBarSettings(containerParent, unit, updateCallback)
             AnchorToDropdown:SetDisabled(true)
             XPosSlider:SetDisabled(true)
             YPosSlider:SetDisabled(true)
-            ForegroundColourPicker:SetDisabled(true)
-            BackgroundColourPicker:SetDisabled(true)
-            NotInterruptibleColourPicker:SetDisabled(true)
+            CastBarColourSettings.Refresh(true)
         end
     end
 
@@ -2670,6 +2715,7 @@ local function CreateGlobalSettings(containerParent)
 
     CreateFontSettings(GlobalContainer)
     CreateTextureSettings(GlobalContainer)
+    CreateGlobalCastBarSettings(GlobalContainer)
     CreateRangeSettings(GlobalContainer)
     CreateAuraDurationSettings(GlobalContainer)
     CreateGlobalHealPredictionSettings(GlobalContainer)
