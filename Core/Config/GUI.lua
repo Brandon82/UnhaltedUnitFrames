@@ -703,9 +703,12 @@ local function CreateFrameSettings(containerParent, unit, unitHasParent, updateC
     end
 end
 
-local function CreateHealPredictionSettings(containerParent, unit, updateCallback)
-    local FrameDB = UUF.db.profile.Units[unit].Frame
-    local HealPredictionDB = UUF.db.profile.Units[unit].HealPrediction
+local function CreateHealPredictionSettings(containerParent, unit, updateCallback, options)
+    options = options or {}
+
+    local FrameDB = options.FrameDB or UUF.db.profile.Units[unit].Frame
+    local HealPredictionDB = options.HealPredictionDB or UUF.db.profile.Units[unit].HealPrediction
+    local onUpdate = options.OnUpdate or updateCallback or function() end
 
     if HealPredictionDB.Absorbs.UseFrameHeight == nil then HealPredictionDB.Absorbs.UseFrameHeight = false end
     if HealPredictionDB.HealAbsorbs.UseFrameHeight == nil then HealPredictionDB.HealAbsorbs.UseFrameHeight = false end
@@ -715,14 +718,14 @@ local function CreateHealPredictionSettings(containerParent, unit, updateCallbac
     local ShowAbsorbToggle = AG:Create("CheckBox")
     ShowAbsorbToggle:SetLabel("Show Absorbs")
     ShowAbsorbToggle:SetValue(HealPredictionDB.Absorbs.Enabled)
-    ShowAbsorbToggle:SetCallback("OnValueChanged", function(_, _, value) HealPredictionDB.Absorbs.Enabled = value updateCallback() RefreshHealPredictionSettings() end)
+    ShowAbsorbToggle:SetCallback("OnValueChanged", function(_, _, value) HealPredictionDB.Absorbs.Enabled = value onUpdate() RefreshHealPredictionSettings() end)
     ShowAbsorbToggle:SetRelativeWidth(0.5)
     AbsorbSettings:AddChild(ShowAbsorbToggle)
 
     local UseStripedTextureAbsorbToggle = AG:Create("CheckBox")
     UseStripedTextureAbsorbToggle:SetLabel("Use Striped Texture")
     UseStripedTextureAbsorbToggle:SetValue(HealPredictionDB.Absorbs.UseStripedTexture)
-    UseStripedTextureAbsorbToggle:SetCallback("OnValueChanged", function(_, _, value) HealPredictionDB.Absorbs.UseStripedTexture = value updateCallback() end)
+    UseStripedTextureAbsorbToggle:SetCallback("OnValueChanged", function(_, _, value) HealPredictionDB.Absorbs.UseStripedTexture = value onUpdate() end)
     UseStripedTextureAbsorbToggle:SetRelativeWidth(0.5)
     AbsorbSettings:AddChild(UseStripedTextureAbsorbToggle)
 
@@ -730,7 +733,7 @@ local function CreateHealPredictionSettings(containerParent, unit, updateCallbac
     AbsorbColourPicker:SetLabel("Absorb Colour")
     local R, G, B, A = unpack(HealPredictionDB.Absorbs.Colour)
     AbsorbColourPicker:SetColor(R, G, B, A)
-    AbsorbColourPicker:SetCallback("OnValueChanged", function(_, _, r, g, b, a) HealPredictionDB.Absorbs.Colour = {r, g, b, a} updateCallback() end)
+    AbsorbColourPicker:SetCallback("OnValueChanged", function(_, _, r, g, b, a) HealPredictionDB.Absorbs.Colour = {r, g, b, a} onUpdate() end)
     AbsorbColourPicker:SetHasAlpha(true)
     AbsorbColourPicker:SetRelativeWidth(0.33)
     AbsorbSettings:AddChild(AbsorbColourPicker)
@@ -740,14 +743,14 @@ local function CreateHealPredictionSettings(containerParent, unit, updateCallbac
     AbsorbHeightSlider:SetValue(HealPredictionDB.Absorbs.Height)
     AbsorbHeightSlider:SetSliderValues(1, FrameDB.Height - 2, 0.1)
     AbsorbHeightSlider:SetRelativeWidth(0.33)
-    AbsorbHeightSlider:SetCallback("OnValueChanged", function(_, _, value) HealPredictionDB.Absorbs.Height = value updateCallback() end)
+    AbsorbHeightSlider:SetCallback("OnValueChanged", function(_, _, value) HealPredictionDB.Absorbs.Height = value onUpdate() end)
     AbsorbSettings:AddChild(AbsorbHeightSlider)
 
     local UseFrameHeightAbsorbToggle = AG:Create("CheckBox")
     UseFrameHeightAbsorbToggle:SetLabel("Use frame height")
     UseFrameHeightAbsorbToggle:SetValue(HealPredictionDB.Absorbs.UseFrameHeight)
     UseFrameHeightAbsorbToggle:SetRelativeWidth(0.33)
-    UseFrameHeightAbsorbToggle:SetCallback("OnValueChanged", function(_, _, value) HealPredictionDB.Absorbs.UseFrameHeight = value updateCallback() RefreshHealPredictionSettings() end)
+    UseFrameHeightAbsorbToggle:SetCallback("OnValueChanged", function(_, _, value) HealPredictionDB.Absorbs.UseFrameHeight = value onUpdate() RefreshHealPredictionSettings() end)
     AbsorbSettings:AddChild(UseFrameHeightAbsorbToggle)
 
     local AbsorbPositionDropdown = AG:Create("Dropdown")
@@ -755,21 +758,21 @@ local function CreateHealPredictionSettings(containerParent, unit, updateCallbac
     AbsorbPositionDropdown:SetLabel("Position")
     AbsorbPositionDropdown:SetValue(HealPredictionDB.Absorbs.Position)
     AbsorbPositionDropdown:SetRelativeWidth(0.33)
-    AbsorbPositionDropdown:SetCallback("OnValueChanged", function(_, _, value) HealPredictionDB.Absorbs.Position = value updateCallback() end)
+    AbsorbPositionDropdown:SetCallback("OnValueChanged", function(_, _, value) HealPredictionDB.Absorbs.Position = value onUpdate() end)
     AbsorbSettings:AddChild(AbsorbPositionDropdown)
 
     local HealAbsorbSettings = GUIWidgets.CreateInlineGroup(containerParent, "Heal Absorb Settings")
     local ShowHealAbsorbToggle = AG:Create("CheckBox")
     ShowHealAbsorbToggle:SetLabel("Show Heal Absorbs")
     ShowHealAbsorbToggle:SetValue(HealPredictionDB.HealAbsorbs.Enabled)
-    ShowHealAbsorbToggle:SetCallback("OnValueChanged", function(_, _, value) HealPredictionDB.HealAbsorbs.Enabled = value updateCallback() RefreshHealPredictionSettings() end)
+    ShowHealAbsorbToggle:SetCallback("OnValueChanged", function(_, _, value) HealPredictionDB.HealAbsorbs.Enabled = value onUpdate() RefreshHealPredictionSettings() end)
     ShowHealAbsorbToggle:SetRelativeWidth(0.5)
     HealAbsorbSettings:AddChild(ShowHealAbsorbToggle)
 
     local UseStripedTextureHealAbsorbToggle = AG:Create("CheckBox")
     UseStripedTextureHealAbsorbToggle:SetLabel("Use Striped Texture")
     UseStripedTextureHealAbsorbToggle:SetValue(HealPredictionDB.HealAbsorbs.UseStripedTexture)
-    UseStripedTextureHealAbsorbToggle:SetCallback("OnValueChanged", function(_, _, value) HealPredictionDB.HealAbsorbs.UseStripedTexture = value updateCallback() end)
+    UseStripedTextureHealAbsorbToggle:SetCallback("OnValueChanged", function(_, _, value) HealPredictionDB.HealAbsorbs.UseStripedTexture = value onUpdate() end)
     UseStripedTextureHealAbsorbToggle:SetRelativeWidth(0.5)
     HealAbsorbSettings:AddChild(UseStripedTextureHealAbsorbToggle)
 
@@ -777,7 +780,7 @@ local function CreateHealPredictionSettings(containerParent, unit, updateCallbac
     HealAbsorbColourPicker:SetLabel("Heal Absorb Colour")
     local R2, G2, B2, A2 = unpack(HealPredictionDB.HealAbsorbs.Colour)
     HealAbsorbColourPicker:SetColor(R2, G2, B2, A2)
-    HealAbsorbColourPicker:SetCallback("OnValueChanged", function(_, _, r, g, b, a) HealPredictionDB.HealAbsorbs.Colour = {r, g, b, a} updateCallback() end)
+    HealAbsorbColourPicker:SetCallback("OnValueChanged", function(_, _, r, g, b, a) HealPredictionDB.HealAbsorbs.Colour = {r, g, b, a} onUpdate() end)
     HealAbsorbColourPicker:SetHasAlpha(true)
     HealAbsorbColourPicker:SetRelativeWidth(0.33)
     HealAbsorbSettings:AddChild(HealAbsorbColourPicker)
@@ -787,14 +790,14 @@ local function CreateHealPredictionSettings(containerParent, unit, updateCallbac
     HealAbsorbHeightSlider:SetValue(HealPredictionDB.HealAbsorbs.Height)
     HealAbsorbHeightSlider:SetSliderValues(1, FrameDB.Height - 2, 0.1)
     HealAbsorbHeightSlider:SetRelativeWidth(0.33)
-    HealAbsorbHeightSlider:SetCallback("OnValueChanged", function(_, _, value) HealPredictionDB.HealAbsorbs.Height = value updateCallback() end)
+    HealAbsorbHeightSlider:SetCallback("OnValueChanged", function(_, _, value) HealPredictionDB.HealAbsorbs.Height = value onUpdate() end)
     HealAbsorbSettings:AddChild(HealAbsorbHeightSlider)
 
     local UseFrameHeightHealAbsorbToggle = AG:Create("CheckBox")
     UseFrameHeightHealAbsorbToggle:SetLabel("Use frame height")
     UseFrameHeightHealAbsorbToggle:SetValue(HealPredictionDB.HealAbsorbs.UseFrameHeight)
     UseFrameHeightHealAbsorbToggle:SetRelativeWidth(0.33)
-    UseFrameHeightHealAbsorbToggle:SetCallback("OnValueChanged", function(_, _, value) HealPredictionDB.HealAbsorbs.UseFrameHeight = value updateCallback() RefreshHealPredictionSettings() end)
+    UseFrameHeightHealAbsorbToggle:SetCallback("OnValueChanged", function(_, _, value) HealPredictionDB.HealAbsorbs.UseFrameHeight = value onUpdate() RefreshHealPredictionSettings() end)
     HealAbsorbSettings:AddChild(UseFrameHeightHealAbsorbToggle)
 
     local HealAbsorbPositionDropdown = AG:Create("Dropdown")
@@ -802,7 +805,7 @@ local function CreateHealPredictionSettings(containerParent, unit, updateCallbac
     HealAbsorbPositionDropdown:SetLabel("Position")
     HealAbsorbPositionDropdown:SetValue(HealPredictionDB.HealAbsorbs.Position)
     HealAbsorbPositionDropdown:SetRelativeWidth(0.33)
-    HealAbsorbPositionDropdown:SetCallback("OnValueChanged", function(_, _, value) HealPredictionDB.HealAbsorbs.Position = value updateCallback() end)
+    HealAbsorbPositionDropdown:SetCallback("OnValueChanged", function(_, _, value) HealPredictionDB.HealAbsorbs.Position = value onUpdate() end)
     HealAbsorbSettings:AddChild(HealAbsorbPositionDropdown)
 
     function RefreshHealPredictionSettings()
@@ -814,6 +817,50 @@ local function CreateHealPredictionSettings(containerParent, unit, updateCallbac
     end
 
     RefreshHealPredictionSettings()
+end
+
+local function GetSmallestUnitFrameHeight()
+    local smallestHeight = nil
+
+    for _, unitDB in pairs(UUF.db.profile.Units) do
+        if unitDB.Frame and unitDB.Frame.Height then
+            if not smallestHeight or unitDB.Frame.Height < smallestHeight then
+                smallestHeight = unitDB.Frame.Height
+            end
+        end
+    end
+
+    return smallestHeight or 3
+end
+
+local function ApplyHealPredictionSettingsToAllUnits(sourceHealPredictionDB)
+    for _, unitDB in pairs(UUF.db.profile.Units) do
+        if unitDB.HealPrediction then
+            UUF:CopyTable(sourceHealPredictionDB, unitDB.HealPrediction)
+        end
+    end
+end
+
+local function CreateGlobalHealPredictionSettings(containerParent)
+    local Container = GUIWidgets.CreateInlineGroup(containerParent, "Heal Prediction")
+
+    GUIWidgets.CreateInformationTag(Container,"Heal prediction settings are applied to all Unit Frames where appropriate.")
+
+    local GlobalHealPredictionDB = {}
+    UUF:CopyTable(UUF.db.profile.Units.player.HealPrediction, GlobalHealPredictionDB)
+
+    local GlobalFrameDB = {
+        Height = GetSmallestUnitFrameHeight(),
+    }
+
+    CreateHealPredictionSettings(Container, "player", nil, {
+        FrameDB = GlobalFrameDB,
+        HealPredictionDB = GlobalHealPredictionDB,
+        OnUpdate = function()
+            ApplyHealPredictionSettingsToAllUnits(GlobalHealPredictionDB)
+            UUF:UpdateAllUnitFrames()
+        end,
+    })
 end
 
 local function CreateCastBarBarSettings(containerParent, unit, updateCallback)
@@ -2625,6 +2672,7 @@ local function CreateGlobalSettings(containerParent)
     CreateTextureSettings(GlobalContainer)
     CreateRangeSettings(GlobalContainer)
     CreateAuraDurationSettings(GlobalContainer)
+    CreateGlobalHealPredictionSettings(GlobalContainer)
 
     local TagContainer = GUIWidgets.CreateInlineGroup(GlobalContainer, "Tag Settings")
 
