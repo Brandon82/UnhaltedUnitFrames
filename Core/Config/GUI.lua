@@ -2409,6 +2409,14 @@ local function CreateSpecificAuraSettings(containerParent, unit, auraDB)
 
     local LayoutContainer = GUIWidgets.CreateInlineGroup(containerParent, "Layout & Positioning")
 
+    local AnchorParentEditBox = AG:Create("EditBox")
+    AnchorParentEditBox:SetLabel("Anchor Parent")
+    AnchorParentEditBox:SetText(AuraDB.AnchorParent or "")
+    AnchorParentEditBox:SetRelativeWidth(1)
+    AnchorParentEditBox:DisableButton(true)
+    AnchorParentEditBox:SetCallback("OnEnterPressed", function(_, _, value) AuraDB.AnchorParent = value ~= "" and value or nil AnchorParentEditBox:SetText(AuraDB.AnchorParent or "") if unit == "boss" then UUF:UpdateBossFrames() else UUF:UpdateUnitAuras(UUF[unit:upper()], unit, auraDB) end end)
+    LayoutContainer:AddChild(AnchorParentEditBox)
+
     local AnchorFromDropdown = AG:Create("Dropdown")
     AnchorFromDropdown:SetList(AnchorPoints[1], AnchorPoints[2])
     AnchorFromDropdown:SetLabel("Anchor From")
