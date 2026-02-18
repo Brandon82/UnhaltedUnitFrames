@@ -8,9 +8,17 @@ local function ShortenCastName(text, maxChars)
     return UUF:CleanTruncateUTF8String(text)
 end
 
-function UUF:CreateUnitCastBar(unitFrame, unit)
-    local FontDB = UUF.db.profile.General.Fonts
+local function ResolveCastBarFont(CastBarDB)
+    local FontsDB = CastBarDB.Fonts
     local GeneralDB = UUF.db.profile.General
+    if not FontsDB or FontsDB.UseGlobal then
+        return UUF.Media.Font, GeneralDB.Fonts.FontFlag, GeneralDB.Fonts.Shadow
+    end
+    local fontPath = UUF.LSM:Fetch("font", FontsDB.Font) or UUF.Media.Font
+    return fontPath, FontsDB.FontFlag, FontsDB.Shadow
+end
+
+function UUF:CreateUnitCastBar(unitFrame, unit)
     local FrameDB = UUF.db.profile.Units[UUF:GetNormalizedUnit(unit)].Frame
     local CastBarDB = UUF.db.profile.Units[UUF:GetNormalizedUnit(unit)].CastBar
     local SpellNameDB = UUF.db.profile.Units[UUF:GetNormalizedUnit(unit)].CastBar.Text.SpellName
@@ -67,46 +75,34 @@ function UUF:CreateUnitCastBar(unitFrame, unit)
         CastBar:SetPoint("BOTTOMRIGHT", CastBarContainer, "BOTTOMRIGHT", -1, 1)
     end
 
+    local cbFont, cbFontFlag, cbShadow = ResolveCastBarFont(CastBarDB)
+
     local SpellNameText = CastBar:CreateFontString(UUF:FetchFrameName(unit) .. "_CastBarSpellNameText", "OVERLAY")
     SpellNameText:ClearAllPoints()
     SpellNameText:SetPoint(SpellNameDB.Layout[1], CastBar, SpellNameDB.Layout[2], SpellNameDB.Layout[3], SpellNameDB.Layout[4])
-    SpellNameText:SetFont(UUF.Media.Font, SpellNameDB.FontSize, GeneralDB.Fonts.FontFlag)
-    if GeneralDB.Fonts.Shadow.Enabled then
-        SpellNameText:SetShadowColor(GeneralDB.Fonts.Shadow.Colour[1], GeneralDB.Fonts.Shadow.Colour[2], GeneralDB.Fonts.Shadow.Colour[3], GeneralDB.Fonts.Shadow.Colour[4])
-        SpellNameText:SetShadowOffset(GeneralDB.Fonts.Shadow.XPos, GeneralDB.Fonts.Shadow.YPos)
+    SpellNameText:SetFont(cbFont, SpellNameDB.FontSize, cbFontFlag)
+    if cbShadow.Enabled then
+        SpellNameText:SetShadowColor(cbShadow.Colour[1], cbShadow.Colour[2], cbShadow.Colour[3], cbShadow.Colour[4])
+        SpellNameText:SetShadowOffset(cbShadow.XPos, cbShadow.YPos)
     else
         SpellNameText:SetShadowColor(0, 0, 0, 0)
         SpellNameText:SetShadowOffset(0, 0)
     end
     SpellNameText:SetTextColor(unpack(SpellNameDB.Colour))
-    if FontDB.Shadow.Enabled then
-        SpellNameText:SetShadowColor(FontDB.Shadow.Colour[1], FontDB.Shadow.Colour[2], FontDB.Shadow.Colour[3], FontDB.Shadow.Colour[4])
-        SpellNameText:SetShadowOffset(FontDB.Shadow.XPos, FontDB.Shadow.YPos)
-    else
-        SpellNameText:SetShadowColor(0, 0, 0, 0)
-        SpellNameText:SetShadowOffset(0, 0)
-    end
     SpellNameText:SetJustifyH(UUF:SetJustification(SpellNameDB.Layout[1]))
 
     local DurationText = CastBar:CreateFontString(UUF:FetchFrameName(unit) .. "_CastBarDurationText", "OVERLAY")
     DurationText:ClearAllPoints()
     DurationText:SetPoint(DurationDB.Layout[1], CastBar, DurationDB.Layout[2], DurationDB.Layout[3], DurationDB.Layout[4])
-    DurationText:SetFont(UUF.Media.Font, DurationDB.FontSize, GeneralDB.Fonts.FontFlag)
-    if GeneralDB.Fonts.Shadow.Enabled then
-        DurationText:SetShadowColor(GeneralDB.Fonts.Shadow.Colour[1], GeneralDB.Fonts.Shadow.Colour[2], GeneralDB.Fonts.Shadow.Colour[3], GeneralDB.Fonts.Shadow.Colour[4])
-        DurationText:SetShadowOffset(GeneralDB.Fonts.Shadow.XPos, GeneralDB.Fonts.Shadow.YPos)
+    DurationText:SetFont(cbFont, DurationDB.FontSize, cbFontFlag)
+    if cbShadow.Enabled then
+        DurationText:SetShadowColor(cbShadow.Colour[1], cbShadow.Colour[2], cbShadow.Colour[3], cbShadow.Colour[4])
+        DurationText:SetShadowOffset(cbShadow.XPos, cbShadow.YPos)
     else
         DurationText:SetShadowColor(0, 0, 0, 0)
         DurationText:SetShadowOffset(0, 0)
     end
     DurationText:SetTextColor(unpack(DurationDB.Colour))
-    if FontDB.Shadow.Enabled then
-        DurationText:SetShadowColor(FontDB.Shadow.Colour[1], FontDB.Shadow.Colour[2], FontDB.Shadow.Colour[3], FontDB.Shadow.Colour[4])
-        DurationText:SetShadowOffset(FontDB.Shadow.XPos, FontDB.Shadow.YPos)
-    else
-        DurationText:SetShadowColor(0, 0, 0, 0)
-        DurationText:SetShadowOffset(0, 0)
-    end
     DurationText:SetJustifyH(UUF:SetJustification(DurationDB.Layout[1]))
 
     if CastBarDB.Inverse then
@@ -160,7 +156,6 @@ function UUF:CreateUnitCastBar(unitFrame, unit)
 end
 
 function UUF:UpdateUnitCastBar(unitFrame, unit)
-    local GeneralDB = UUF.db.profile.General
     local FrameDB = UUF.db.profile.Units[UUF:GetNormalizedUnit(unit)].Frame
     local CastBarDB = UUF.db.profile.Units[UUF:GetNormalizedUnit(unit)].CastBar
 
@@ -226,14 +221,16 @@ function UUF:UpdateUnitCastBar(unitFrame, unit)
                 unitFrame.Castbar:SetPoint("BOTTOMRIGHT", CastBarContainer, "BOTTOMRIGHT", -1, 1)
             end
 
+            local cbFont, cbFontFlag, cbShadow = ResolveCastBarFont(CastBarDB)
+
             if unitFrame.Castbar.Text then
                 local SpellNameDB = UUF.db.profile.Units[UUF:GetNormalizedUnit(unit)].CastBar.Text.SpellName
                 unitFrame.Castbar.Text:ClearAllPoints()
                 unitFrame.Castbar.Text:SetPoint(SpellNameDB.Layout[1], unitFrame.Castbar, SpellNameDB.Layout[2], SpellNameDB.Layout[3], SpellNameDB.Layout[4])
-                unitFrame.Castbar.Text:SetFont(UUF.Media.Font, SpellNameDB.FontSize, UUF.db.profile.General.Fonts.FontFlag)
-                if GeneralDB.Fonts.Shadow.Enabled then
-                    unitFrame.Castbar.Text:SetShadowColor(GeneralDB.Fonts.Shadow.Colour[1], GeneralDB.Fonts.Shadow.Colour[2], GeneralDB.Fonts.Shadow.Colour[3], GeneralDB.Fonts.Shadow.Colour[4])
-                    unitFrame.Castbar.Text:SetShadowOffset(GeneralDB.Fonts.Shadow.XPos, GeneralDB.Fonts.Shadow.YPos)
+                unitFrame.Castbar.Text:SetFont(cbFont, SpellNameDB.FontSize, cbFontFlag)
+                if cbShadow.Enabled then
+                    unitFrame.Castbar.Text:SetShadowColor(cbShadow.Colour[1], cbShadow.Colour[2], cbShadow.Colour[3], cbShadow.Colour[4])
+                    unitFrame.Castbar.Text:SetShadowOffset(cbShadow.XPos, cbShadow.YPos)
                 else
                     unitFrame.Castbar.Text:SetShadowColor(0, 0, 0, 0)
                     unitFrame.Castbar.Text:SetShadowOffset(0, 0)
@@ -247,10 +244,10 @@ function UUF:UpdateUnitCastBar(unitFrame, unit)
                 local DurationDB = UUF.db.profile.Units[UUF:GetNormalizedUnit(unit)].CastBar.Text.Duration
                 unitFrame.Castbar.Time:ClearAllPoints()
                 unitFrame.Castbar.Time:SetPoint(DurationDB.Layout[1], unitFrame.Castbar, DurationDB.Layout[2], DurationDB.Layout[3], DurationDB.Layout[4])
-                unitFrame.Castbar.Time:SetFont(UUF.Media.Font, DurationDB.FontSize, UUF.db.profile.General.Fonts.FontFlag)
-                if GeneralDB.Fonts.Shadow.Enabled then
-                    unitFrame.Castbar.Time:SetShadowColor(GeneralDB.Fonts.Shadow.Colour[1], GeneralDB.Fonts.Shadow.Colour[2], GeneralDB.Fonts.Shadow.Colour[3], GeneralDB.Fonts.Shadow.Colour[4])
-                    unitFrame.Castbar.Time:SetShadowOffset(GeneralDB.Fonts.Shadow.XPos, GeneralDB.Fonts.Shadow.YPos)
+                unitFrame.Castbar.Time:SetFont(cbFont, DurationDB.FontSize, cbFontFlag)
+                if cbShadow.Enabled then
+                    unitFrame.Castbar.Time:SetShadowColor(cbShadow.Colour[1], cbShadow.Colour[2], cbShadow.Colour[3], cbShadow.Colour[4])
+                    unitFrame.Castbar.Time:SetShadowOffset(cbShadow.XPos, cbShadow.YPos)
                 else
                     unitFrame.Castbar.Time:SetShadowColor(0, 0, 0, 0)
                     unitFrame.Castbar.Time:SetShadowOffset(0, 0)

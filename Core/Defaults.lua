@@ -160,6 +160,17 @@ local Defaults = {
                     ColourByClass = false,
                     Inverse = false,
                     FrameStrata = "MEDIUM",
+                    Fonts = {
+                        UseGlobal = true,
+                        Font = "Friz Quadrata TT",
+                        FontFlag = "OUTLINE",
+                        Shadow = {
+                            Enabled = false,
+                            Colour = {0, 0, 0, 1},
+                            XPos = 1,
+                            YPos = -1,
+                        }
+                    },
                     Icon = {
                         Enabled = true,
                         Position = "LEFT",
@@ -374,6 +385,17 @@ local Defaults = {
                     ColourByClass = false,
                     Inverse = false,
                     FrameStrata = "MEDIUM",
+                    Fonts = {
+                        UseGlobal = true,
+                        Font = "Friz Quadrata TT",
+                        FontFlag = "OUTLINE",
+                        Shadow = {
+                            Enabled = false,
+                            Colour = {0, 0, 0, 1},
+                            XPos = 1,
+                            YPos = -1,
+                        }
+                    },
                     Icon = {
                         Enabled = true,
                         Position = "LEFT",
@@ -763,6 +785,17 @@ local Defaults = {
                     ColourByClass = false,
                     Inverse = false,
                     FrameStrata = "MEDIUM",
+                    Fonts = {
+                        UseGlobal = true,
+                        Font = "Friz Quadrata TT",
+                        FontFlag = "OUTLINE",
+                        Shadow = {
+                            Enabled = false,
+                            Colour = {0, 0, 0, 1},
+                            XPos = 1,
+                            YPos = -1,
+                        }
+                    },
                     Icon = {
                         Enabled = false,
                         Position = "LEFT",
@@ -1132,6 +1165,17 @@ local Defaults = {
                     ColourByClass = false,
                     Inverse = false,
                     FrameStrata = "MEDIUM",
+                    Fonts = {
+                        UseGlobal = true,
+                        Font = "Friz Quadrata TT",
+                        FontFlag = "OUTLINE",
+                        Shadow = {
+                            Enabled = false,
+                            Colour = {0, 0, 0, 1},
+                            XPos = 1,
+                            YPos = -1,
+                        }
+                    },
                     Icon = {
                         Enabled = false,
                         Position = "LEFT",
@@ -1317,6 +1361,17 @@ local Defaults = {
                     ColourByClass = false,
                     Inverse = false,
                     FrameStrata = "MEDIUM",
+                    Fonts = {
+                        UseGlobal = true,
+                        Font = "Friz Quadrata TT",
+                        FontFlag = "OUTLINE",
+                        Shadow = {
+                            Enabled = false,
+                            Colour = {0, 0, 0, 1},
+                            XPos = 1,
+                            YPos = -1,
+                        }
+                    },
                     Icon = {
                         Enabled = true,
                         Position = "LEFT",

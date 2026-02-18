@@ -1209,6 +1209,90 @@ local function CreateCastBarDurationTextSettings(containerParent, unit, updateCa
     RefreshCastBarDurationSettings()
 end
 
+local function CreateCastBarFontSettings(containerParent, unit, updateCallback)
+    local CastBarFontsDB = UUF.db.profile.Units[unit].CastBar.Fonts
+
+    local Container = GUIWidgets.CreateInlineGroup(containerParent, "Cast Bar Font")
+
+    GUIWidgets.CreateInformationTag(Container, "Override the global font for this castbar. When |cFF8080FFUse Global Font|r is enabled, the castbar uses the font from |cFFFFCC00General > Fonts|r.")
+
+    local UseGlobalToggle = AG:Create("CheckBox")
+    UseGlobalToggle:SetLabel("Use |cFF8080FFGlobal Font|r")
+    UseGlobalToggle:SetValue(CastBarFontsDB.UseGlobal)
+    UseGlobalToggle:SetFullWidth(true)
+    UseGlobalToggle:SetCallback("OnValueChanged", function(_, _, value) CastBarFontsDB.UseGlobal = value updateCallback() RefreshCastBarFontSettings() end)
+    Container:AddChild(UseGlobalToggle)
+
+    local FontDropdown = AG:Create("LSM30_Font")
+    FontDropdown:SetList(LSM:HashTable("font"))
+    FontDropdown:SetLabel("Font")
+    FontDropdown:SetValue(CastBarFontsDB.Font)
+    FontDropdown:SetRelativeWidth(0.5)
+    FontDropdown:SetCallback("OnValueChanged", function(widget, _, value) widget:SetValue(value) CastBarFontsDB.Font = value updateCallback() end)
+    Container:AddChild(FontDropdown)
+
+    local FontFlagDropdown = AG:Create("Dropdown")
+    FontFlagDropdown:SetList({["NONE"] = "None", ["OUTLINE"] = "Outline", ["THICKOUTLINE"] = "Thick Outline", ["MONOCHROME"] = "Monochrome", ["MONOCHROMEOUTLINE"] = "Monochrome Outline", ["MONOCHROMETHICKOUTLINE"] = "Monochrome Thick Outline"})
+    FontFlagDropdown:SetLabel("Font Flag")
+    FontFlagDropdown:SetValue(CastBarFontsDB.FontFlag)
+    FontFlagDropdown:SetRelativeWidth(0.5)
+    FontFlagDropdown:SetCallback("OnValueChanged", function(widget, _, value) widget:SetValue(value) CastBarFontsDB.FontFlag = value updateCallback() end)
+    Container:AddChild(FontFlagDropdown)
+
+    local ShadowGroup = AG:Create("SimpleGroup")
+    ShadowGroup:SetFullWidth(true)
+    ShadowGroup:SetLayout("Flow")
+    Container:AddChild(ShadowGroup)
+
+    GUIWidgets.CreateHeader(ShadowGroup, "Font Shadows")
+
+    local ShadowToggle = AG:Create("CheckBox")
+    ShadowToggle:SetLabel("Enable Font Shadows")
+    ShadowToggle:SetValue(CastBarFontsDB.Shadow.Enabled)
+    ShadowToggle:SetRelativeWidth(0.5)
+    ShadowToggle:SetCallback("OnValueChanged", function(_, _, value) CastBarFontsDB.Shadow.Enabled = value updateCallback() GUIWidgets.DeepDisable(ShadowGroup, not CastBarFontsDB.Shadow.Enabled, ShadowToggle) end)
+    ShadowGroup:AddChild(ShadowToggle)
+
+    local ShadowColourPicker = AG:Create("ColorPicker")
+    ShadowColourPicker:SetLabel("Colour")
+    ShadowColourPicker:SetColor(unpack(CastBarFontsDB.Shadow.Colour))
+    ShadowColourPicker:SetRelativeWidth(0.5)
+    ShadowColourPicker:SetCallback("OnValueChanged", function(_, _, r, g, b, a) CastBarFontsDB.Shadow.Colour = {r, g, b, a} updateCallback() end)
+    ShadowGroup:AddChild(ShadowColourPicker)
+
+    local ShadowXSlider = AG:Create("Slider")
+    ShadowXSlider:SetLabel("Offset X")
+    ShadowXSlider:SetValue(CastBarFontsDB.Shadow.XPos)
+    ShadowXSlider:SetSliderValues(-5, 5, 1)
+    ShadowXSlider:SetRelativeWidth(0.5)
+    ShadowXSlider:SetCallback("OnValueChanged", function(_, _, value) CastBarFontsDB.Shadow.XPos = value updateCallback() end)
+    ShadowGroup:AddChild(ShadowXSlider)
+
+    local ShadowYSlider = AG:Create("Slider")
+    ShadowYSlider:SetLabel("Offset Y")
+    ShadowYSlider:SetValue(CastBarFontsDB.Shadow.YPos)
+    ShadowYSlider:SetSliderValues(-5, 5, 1)
+    ShadowYSlider:SetRelativeWidth(0.5)
+    ShadowYSlider:SetCallback("OnValueChanged", function(_, _, value) CastBarFontsDB.Shadow.YPos = value updateCallback() end)
+    ShadowGroup:AddChild(ShadowYSlider)
+
+    GUIWidgets.DeepDisable(ShadowGroup, not CastBarFontsDB.Shadow.Enabled, ShadowToggle)
+
+    function RefreshCastBarFontSettings()
+        local useGlobal = CastBarFontsDB.UseGlobal
+        FontDropdown:SetDisabled(useGlobal)
+        FontFlagDropdown:SetDisabled(useGlobal)
+        if useGlobal then
+            GUIWidgets.DeepDisable(ShadowGroup, true)
+        else
+            GUIWidgets.DeepDisable(ShadowGroup, not CastBarFontsDB.Shadow.Enabled, ShadowToggle)
+            ShadowToggle:SetDisabled(false)
+        end
+    end
+
+    RefreshCastBarFontSettings()
+end
+
 local function CreateCastBarSettings(containerParent, unit)
 
     local function SelectCastBarTab(CastBarContainer, _, CastBarTab)
@@ -1222,6 +1306,8 @@ local function CreateCastBarSettings(containerParent, unit)
             CreateCastBarSpellNameTextSettings(CastBarContainer, unit, function() if unit == "boss" then UUF:UpdateBossFrames() else UUF:UpdateUnitCastBar(UUF[unit:upper()], unit) end end)
         elseif CastBarTab == "Duration" then
             CreateCastBarDurationTextSettings(CastBarContainer, unit, function() if unit == "boss" then UUF:UpdateBossFrames() else UUF:UpdateUnitCastBar(UUF[unit:upper()], unit) end end)
+        elseif CastBarTab == "Font" then
+            CreateCastBarFontSettings(CastBarContainer, unit, function() if unit == "boss" then UUF:UpdateBossFrames() else UUF:UpdateUnitCastBar(UUF[unit:upper()], unit) end end)
         end
     end
 
@@ -1233,6 +1319,7 @@ local function CreateCastBarSettings(containerParent, unit)
         {text = "Icon" , value = "Icon"},
         {text = "Text: |cFFFFFFFFSpell Name|r", value = "SpellName"},
         {text = "Text: |cFFFFFFFFDuration|r", value = "Duration"},
+        {text = "Font", value = "Font"},
     })
     CastBarTabGroup:SetCallback("OnGroupSelected", SelectCastBarTab)
     CastBarTabGroup:SelectTab(GetSavedSubTab(unit, "CastBar", "Bar"))
